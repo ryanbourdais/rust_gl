@@ -3,8 +3,7 @@
 extern crate glium;
 
 fn main() {
-    use glium::glutin;
-    use glium::Surface;
+    use glium::{glutin, Surface};
 
     let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new();
@@ -31,9 +30,11 @@ fn main() {
         #version 140
 
         in vec2 position;
+
+        uniform mat4 matrix;
         
         void main() {
-            gl_Position = vec4(position, 0.0, 1.0);
+            gl_Position = matrix * vec4(position, 0.0, 1.0);
         }
     "#;
 
@@ -49,17 +50,11 @@ fn main() {
 
     let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
-    event_loop.run(move |ev, _, control_flow| {
+    let mut t: f32 = -0.5;
 
-        let mut target = display.draw();
-
-        target.clear_color(0.0, 0.0, 1.0, 1.0);
-        target.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms, &Default::default()).unwrap();
-        target.finish().unwrap();
+    event_loop.run(move |event, _, control_flow| {
     
-        let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
-        *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
-        match ev {
+        match event {
             glutin::event::Event::WindowEvent { event, .. } => match event {
                 glutin::event::WindowEvent::CloseRequested => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
@@ -67,7 +62,35 @@ fn main() {
                 },
                 _ => return,
             },
-            _ => (),
+            glutin::event::Event::NewEvents(cause) => match cause {
+                glutin::event::StartCause::ResumeTimeReached { .. } => (),
+                glutin::event::StartCause::Init => (),
+                _ => return,
+            },
+            _ => return,
         }
+
+        let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
+        *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
+
+        t += 0.002;
+        if t > 0.5 {
+            t = -0.5;
+        }
+
+        let mut target = display.draw();
+
+        target.clear_color(0.0, 0.0, 1.0, 1.0);
+        let uniforms = uniform! {
+            matrix: [
+                [t.cos(), t.sin(), 0.0, 0.0],
+                [-t.sin(), t.cos(), 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [t, 0.0, 0.0, 1.0f32],
+            ]
+        };
+        target.draw(&vertex_buffer, &indices, &program, &uniforms, &Default::default()).unwrap();
+        target.finish().unwrap();
+
     });
 }
