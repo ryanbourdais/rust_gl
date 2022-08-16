@@ -116,7 +116,7 @@ fn main() {
         let params = glium::DrawParameters {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess, write: true, ..Default::default() },
-                ..Default::default()
+                backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise, ..Default::default()
             };
 
         target.draw((&positions, &normals), &indices, &program, &uniform! { matrix: matrix, perspective: perspective, u_light: light }, &params).unwrap();
