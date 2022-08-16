@@ -2,6 +2,7 @@
 #[macro_use]
 extern crate glium;
 extern crate image;
+mod teapot;
 
 use std::io::Cursor;
 
