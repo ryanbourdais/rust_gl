@@ -4,8 +4,6 @@ extern crate glium;
 extern crate image;
 mod teapot;
 
-// use std::io::Cursor;
-
 fn main() {
     use glium::{glutin, Surface};
     
